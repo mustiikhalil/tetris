@@ -9,6 +9,7 @@
 import UIKit
 import SpriteKit
 import GameplayKit
+import ReSwift
 
 class GameViewController: UIViewController, SwiftrisDelegate, UIGestureRecognizerDelegate {
 
@@ -17,9 +18,42 @@ class GameViewController: UIViewController, SwiftrisDelegate, UIGestureRecognize
     var panPointReference: CGPoint?
     @IBOutlet weak var scoreLabel: UILabel!
     @IBOutlet weak var levelLabel: UILabel!
+    @IBOutlet var SubMenuView: UIView!
+    @IBOutlet weak var VisualEffectView: UIVisualEffectView!
+    
+    @IBOutlet weak var MenuButton: UIButton!
+    var effect: UIVisualEffect!
+    
+    let window = UIApplication.shared.keyWindow!
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        setupAnimationForNavigationBar(caseOfFunction: false, view: self)
+        
+        MenuButton.layer.cornerRadius = 6
+        
+    }
+    
+    // creates the button that's going to be used
+    func addButton(){
+        // replacing the navigation bar back button with the new button that was created
+        let back = UIBarButtonItem(title: "Back", style: .plain, target: self, action: #selector(self.backAction(_:)))
+        self.navigationItem.leftBarButtonItem = back
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // creating a back button
+        addButton()
+        
+        
+        //store the effect (blurring) and remove the effect in the beginning
+        effect = VisualEffectView.effect
+        VisualEffectView.effect = nil
+        
+        // set the radius of the view of the popup
+        SubMenuView.layer.cornerRadius = 5
         
         //configure the view - as! is a downcaster
         let skView = view as! SKView
@@ -39,7 +73,12 @@ class GameViewController: UIViewController, SwiftrisDelegate, UIGestureRecognize
         skView.presentScene(scene)
         
     }
-
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super .viewDidDisappear(animated)
+        swiftris.endGame()
+    }
+    
     override var prefersStatusBarHidden: Bool {
         return true
     }
@@ -123,7 +162,7 @@ class GameViewController: UIViewController, SwiftrisDelegate, UIGestureRecognize
     func gameDidEnd(swiftris: Swiftris) {
         view.isUserInteractionEnabled = false
         scene.stopTicking()
-        scene.playSound(sound: "Sounds/gameover.mp3")
+        scene.playSound(sound: "gameover.mp3")
         scene.animateCollapsingLines(linesToRemove: swiftris.removeAllBlocks(), fallenBlocks: swiftris.removeAllBlocks()) {
             swiftris.beginGame()
         }
@@ -136,7 +175,7 @@ class GameViewController: UIViewController, SwiftrisDelegate, UIGestureRecognize
         } else if scene.tickLengthMillis > 50 {
             scene.tickLengthMillis -= 50
         }
-        scene.playSound(sound: "Sounds/levelup.mp3")
+        scene.playSound(sound: "levelup.mp3")
     }
     
     func gameShapeDidDrop(swiftris: Swiftris) {
@@ -144,7 +183,7 @@ class GameViewController: UIViewController, SwiftrisDelegate, UIGestureRecognize
         scene.redrawShape(shape: swiftris.fallingShape!) {
             swiftris.letShapeFall()
         }
-        scene.playSound(sound: "Sounds/drop.mp3")
+        scene.playSound(sound: "drop.mp3")
     }
     
     func gameShapeDidLand(swiftris: Swiftris) {
@@ -157,7 +196,7 @@ class GameViewController: UIViewController, SwiftrisDelegate, UIGestureRecognize
                 // #11
                 self.gameShapeDidLand(swiftris: swiftris)
             }
-            scene.playSound(sound: "Sounds/bomb.mp3")
+            scene.playSound(sound: "bomb.mp3")
         } else {
             nextShape()
         }
@@ -167,4 +206,51 @@ class GameViewController: UIViewController, SwiftrisDelegate, UIGestureRecognize
     func gameShapeDidMove(swiftris: Swiftris) {
         scene.redrawShape(shape: swiftris.fallingShape!) {}
     }
+    
+    func animateIn() {
+        window.addSubview(SubMenuView)
+        SubMenuView.center = self.view.center
+        
+        SubMenuView.transform = CGAffineTransform.init(scaleX: 1.3, y: 1.3)
+        SubMenuView.alpha = 0
+        
+        UIView.animate(withDuration: 0.4, animations: {
+            self.VisualEffectView.effect = self.effect
+            self.SubMenuView.alpha = 1
+            self.SubMenuView.transform = CGAffineTransform.identity
+        })
+    }
+    
+    func animateOut() {
+        UIView.animate(withDuration: 0.3, animations: {
+            self.SubMenuView.transform = CGAffineTransform.init(scaleX: 1.3, y: 1.3)
+            self.SubMenuView.alpha = 0
+            self.MenuButton.alpha = 1
+            self.VisualEffectView.effect = nil
+            }, completion: { (success: Bool) in
+                self.SubMenuView.removeFromSuperview()
+                })
+    }
+    
+    @IBAction func showMenu(_ sender: Any) {
+        self.view.isUserInteractionEnabled = false
+        MenuButton.alpha = 0
+        swiftris.pauseGame()
+        scene.stopTicking()
+        animateIn()
+    }
+    
+    @IBAction func cancelMenu(_ sender: UIButton) {
+        animateOut()
+        self.view.isUserInteractionEnabled = true
+        scene.startTicking()
+    }
+    
+    
+    // function to go back to the main view controller
+    @IBAction func backAction(_ sender: UIButton){
+        animateOut()
+        let _ = self.navigationController?.popViewController(animated: true)
+    }
 }
+

@@ -12,6 +12,7 @@ import GameplayKit
 let TickLengthLevelOne = TimeInterval(600)
 let BlockSize: CGFloat = 20.0
 
+
 class GameScene: SKScene {
     
     var tick:(() -> ())?
@@ -26,15 +27,16 @@ class GameScene: SKScene {
     
     required init(coder aDecoder: NSCoder) {
         fatalError("NSCoder is not supported")
-    }
+    } 
     
     override init(size: CGSize) {
         super.init(size: size)
         
         anchorPoint = CGPoint(x: 0, y: 1.0)
-        
-        let background = SKSpriteNode(imageNamed: "background")
-        
+
+		let backgroundTexture = SKTexture(imageNamed: "background" )
+		let background = SKSpriteNode(texture: backgroundTexture, size: CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height))
+
         background.position = CGPoint(x: 0, y: 0)
         background.anchorPoint = CGPoint(x: 0, y: 1.0)
         
@@ -42,20 +44,20 @@ class GameScene: SKScene {
         addChild(gameLayer)
         
         let gameBoardTexture = SKTexture(imageNamed: "gameboard")
-        let gameBoard = SKSpriteNode(texture: gameBoardTexture, size: CGSize(width: BlockSize * CGFloat(NumColumns), height: BlockSize * CGFloat(NumRows)))
+        let gameBoard = SKSpriteNode(texture: gameBoardTexture, size: CGSize(width: BlockSize * CGFloat(NumColumns), height: BlockSize * CGFloat(NumRows - 2)))
         gameBoard.anchorPoint = CGPoint(x: 0, y: 1.0)
-        gameBoard.position = LayerPosition
+		gameBoard.position = CGPoint(x: 6, y: -48)
         
         shapeLayer.position = LayerPosition
         shapeLayer.addChild(gameBoard)
         
         gameLayer.addChild(shapeLayer)
         
-        //run(SKAction.repeatForever(SKAction.playSoundFileNamed("Sounds/theme.wav", waitForCompletion: true)))
+        //run(SKAction.repeatForever(SKAction.playSoundFileNamed("theme.mp3", waitForCompletion: true)))
     }
     
     func playSound(sound:String) {
-        run(SKAction.playSoundFileNamed(sound, waitForCompletion: false))
+        //run(SKAction.playSoundFileNamed(sound, waitForCompletion: false))
         
     }
     
